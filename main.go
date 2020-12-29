@@ -28,7 +28,6 @@ func main() {
 	//如果过短或者不以.txt结尾，那么就是查询单词
 	if len(os.Args[1]) < 5 || os.Args[1][(len(os.Args[1])-4):] != ".txt" {
 		fmt.Println(trans(os.Args[1]))
-		// fmt.Println(os.Args[1][:(len(os.Args[1])-4)])
 		os.Exit(2)
 	}
 
@@ -54,19 +53,19 @@ func main() {
 		Foreground(tcell.ColorWhite)
 	s.SetStyle(defStyle)
 
-	displayHelloWorld(s, "开始背单词~", 0)
+	displayTxt(s, "开始背单词", 0)
 	time.Sleep(time.Second)
 	i := 0
 	j := 0
-	zh := ""
+	zh := []string{}
 
 	//开始循环单词表
 	for {
 		if i == len {
-			displayHelloWorld(s, "放映结束，按任意键退出", 0)
+			displayTxt(s, "放映结束，按任意键退出", 0)
 		}
 		if j == 0 && i != len {
-			displayHelloWorld(s, tt[arr[i]], arr[i]+1)
+			displayTxt(s, tt[arr[i]], arr[i]+1) //显示单词
 			zh = trans(tt[arr[i]])
 		}
 
@@ -80,7 +79,7 @@ func main() {
 			}
 			if ev.Key() == tcell.KeyEnter {
 				if j == 0 {
-					displayHelloWorld(s, zh, arr[i]+1)
+					displayMore(s, zh, arr[i]+1) //显示解释
 					j++
 				} else {
 					i++
@@ -127,7 +126,7 @@ func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 		x += w
 	}
 }
-func displayHelloWorld(s tcell.Screen, str string, number int) {
+func displayTxt(s tcell.Screen, str string, number int) {
 	w, h := s.Size()
 	s.Clear()
 	emitStr(s, w/2-len(str)/2, h/2-1, tcell.StyleDefault, str)
@@ -136,11 +135,23 @@ func displayHelloWorld(s tcell.Screen, str string, number int) {
 	}
 	s.Show()
 }
+func displayMore(s tcell.Screen, str []string, number int) {
+	_, h := s.Size()
+	s.Clear()
+	for i, n := range str {
+		emitStr(s, 1, h/2-1+i, tcell.StyleDefault, n)
+	}
+	if number != 0 {
+		emitStr(s, 1, 1, tcell.StyleDefault, strconv.Itoa(number))
+	}
+	s.Show()
+}
 
 //有道翻译
-func trans(str string) string {
+func trans(str string) []string {
 	opts := ydfanyi.NewOptions("", "", "")
 	res, _ := ydfanyi.Do(str, opts)
-	zh := strings.Join(res.SmartResult.Entries, "")
+	// zh := strings.Join(res.SmartResult.Entries, "")
+	zh := res.SmartResult.Entries
 	return zh
 }

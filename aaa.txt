@@ -1,9 +1,3 @@
-a
+hello
+hi
 abandon
-abide
-ability
-able
-abnormal
-aboard
-abolish
-abound
