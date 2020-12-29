@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,15 +18,26 @@ import (
 
 func main() {
 
+	//如果啥也没加，就提示用法
 	if len(os.Args) == 1 {
+		fmt.Println("用法Ⅰ：.\\main.exe + 词汇表.txt")
+		fmt.Println("用法Ⅱ：.\\main.exe + 英语单词")
 		os.Exit(1)
 	}
-	//读取词汇表
+
+	//如果过短或者不以.txt结尾，那么就是查询单词
+	if len(os.Args[1]) < 5 || os.Args[1][(len(os.Args[1])-4):] != ".txt" {
+		fmt.Println(trans(os.Args[1]))
+		// fmt.Println(os.Args[1][:(len(os.Args[1])-4)])
+		os.Exit(2)
+	}
+
+	//读取词汇表&打乱设置顺序
 	tt := strings.Fields(read(os.Args[1]))
-	//打乱设置顺序
 	len := len(tt)
 	arr := generate(len)
-	//显示
+
+	//像PPT一样显示
 	encoding.Register()
 	s, e := tcell.NewScreen()
 	if e != nil {
@@ -42,7 +54,7 @@ func main() {
 		Foreground(tcell.ColorWhite)
 	s.SetStyle(defStyle)
 
-	displayHelloWorld(s, "开始背单词~")
+	displayHelloWorld(s, "开始背单词~", 0)
 	time.Sleep(time.Second)
 	i := 0
 	j := 0
@@ -51,10 +63,10 @@ func main() {
 	//开始循环单词表
 	for {
 		if i == len {
-			displayHelloWorld(s, "放映结束，按任意键退出")
+			displayHelloWorld(s, "放映结束，按任意键退出", 0)
 		}
 		if j == 0 && i != len {
-			displayHelloWorld(s, tt[arr[i]])
+			displayHelloWorld(s, tt[arr[i]], arr[i]+1)
 			zh = trans(tt[arr[i]])
 		}
 
@@ -68,7 +80,7 @@ func main() {
 			}
 			if ev.Key() == tcell.KeyEnter {
 				if j == 0 {
-					displayHelloWorld(s, zh)
+					displayHelloWorld(s, zh, arr[i]+1)
 					j++
 				} else {
 					i++
@@ -86,6 +98,8 @@ func read(str string) string {
 	}
 	return string(f)
 }
+
+//生成乱序
 func generate(n int) []int {
 	arr := make([]int, n)
 	for i := range arr {
@@ -98,6 +112,8 @@ func generate(n int) []int {
 	}
 	return arr
 }
+
+//来自tcell的demo
 func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 	for _, c := range str {
 		var comb []rune
@@ -111,12 +127,17 @@ func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 		x += w
 	}
 }
-func displayHelloWorld(s tcell.Screen, str string) {
+func displayHelloWorld(s tcell.Screen, str string, number int) {
 	w, h := s.Size()
 	s.Clear()
 	emitStr(s, w/2-len(str)/2, h/2-1, tcell.StyleDefault, str)
+	if number != 0 {
+		emitStr(s, 1, 1, tcell.StyleDefault, strconv.Itoa(number))
+	}
 	s.Show()
 }
+
+//有道翻译
 func trans(str string) string {
 	opts := ydfanyi.NewOptions("", "", "")
 	res, _ := ydfanyi.Do(str, opts)
